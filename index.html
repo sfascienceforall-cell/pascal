@@ -1,0 +1,172 @@
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#fff;font-family:system-ui,-apple-system,sans-serif;}
+canvas{display:block;border-radius:12px;border:1.5px solid #e8e8e8;touch-action:none;}
+.fml{font-size:13px;padding:10px 16px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#2c2c2a;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap;}
+.pill{font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:6px 14px;white-space:nowrap;}
+.val{min-width:78px;text-align:center;font-size:13px;font-weight:500;color:#2c2c2a;background:#f5f5f5;border:1.5px solid #d0d0d0;border-radius:20px;padding:5px 10px;}
+.btn{padding:8px 18px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1.5px solid #d0d0d0;background:#fff;color:#2c2c2a;}
+.btn.on{border-color:#185fa5;background:#e6f1fb;color:#185fa5;}
+.info{font-size:12px;padding:8px 14px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#555;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
+input[type=range]{flex:1;min-width:110px;}
+</style>
+
+<canvas id="cv" style="width:100%;height:58vh;min-height:360px;"></canvas>
+
+<div class="fml">
+  <b style="color:#185fa5">P₁ = P₂</b> partout &nbsp;⇒&nbsp; <b style="color:#E24B4A">F₂ = F₁ × (S₂/S₁) = F₁ × (r₂/r₁)²</b> &nbsp;|&nbsp; force <b>multipliée</b> si piston de sortie plus gros ; il monte moins haut (F₁·d₁ = F₂·d₂)
+</div>
+
+<div class="row">
+  <span class="pill" style="min-width:150px;border-color:#9FE1CB;color:#1D9E75;">F₁ &nbsp;ce que TU pousses</span>
+  <input type="range" id="F1" min="5" max="60" value="20" step="1" style="accent-color:#1D9E75;">
+  <span class="val" id="F1v" style="border-color:#9FE1CB;color:#1D9E75;">20 N</span>
+</div>
+<div class="row">
+  <span class="pill" style="min-width:150px;border-color:#9FE1CB;color:#1D9E75;">r₁ &nbsp;petit piston (entrée)</span>
+  <input type="range" id="r1" min="3" max="12" value="5" step="0.5" style="accent-color:#1D9E75;">
+  <span class="val" id="r1v" style="border-color:#9FE1CB;color:#1D9E75;">5 cm</span>
+</div>
+<div class="row">
+  <span class="pill" style="min-width:150px;border-color:#f09595;color:#E24B4A;">r₂ &nbsp;grand piston (sortie)</span>
+  <input type="range" id="r2" min="3" max="20" value="15" step="0.5" style="accent-color:#E24B4A;">
+  <span class="val" id="r2v" style="border-color:#f09595;color:#E24B4A;">15 cm</span>
+</div>
+<div class="row">
+  <button class="btn" id="bA" onclick="anim=!anim;this.className=anim?'btn on':'btn';this.textContent=anim?'Déplacement : ON':'Montrer le déplacement (d₁, d₂)';">Montrer le déplacement (d₁, d₂)</button>
+</div>
+
+<div class="info" id="info"></div>
+
+<script>
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const RED='#E24B4A',DRED='#a32d2d',BLUE='#378ADD',BLUE_D='#185fa5',FLUID='#cfe4f7',FLUID2='#9cc7ee',GREEN='#1D9E75',GREEN_D='#0F6E56',GREY='#9aa0a6',AX='#c8ccd0';
+let W=0,H=0,dpr=1,anim=false,phase=0;
+let F1=20,r1=5,r2=15;
+const g=9.81;
+function bind(id,fmt,f){const s=document.getElementById(id),o=document.getElementById(id+'v');
+  s.addEventListener('input',()=>{const v=parseFloat(s.value);f(v);o.textContent=fmt(v);});}
+bind('F1',v=>v+' N',v=>F1=v);
+bind('r1',v=>v+' cm',v=>r1=v);
+bind('r2',v=>v+' cm',v=>r2=v);
+
+function syncSize(){const r=cv.getBoundingClientRect();dpr=window.devicePixelRatio||1;
+  const nW=Math.round(r.width)||700,nH=Math.round(r.height)||370;
+  if(nW!==W||nH!==H){W=nW;H=nH;cv.width=W*dpr;cv.height=H*dpr;}
+  ctx.setTransform(dpr,0,0,dpr,0,0);}
+
+// flèche à largeur variable (corps rectangulaire + tête), sans label
+function fatArrow(x,y,dir,len,wdt,col){
+  // dir = -1 (haut) ou +1 (bas) ; y = base (côté piston)
+  const tip=y+dir*len, hh=Math.max(12,wdt*1.6), hw=wdt*1.7;
+  const shaftEnd=tip-dir*hh;
+  ctx.fillStyle=col;
+  ctx.fillRect(x-wdt/2, Math.min(y,shaftEnd), wdt, Math.abs(shaftEnd-y));
+  ctx.beginPath();ctx.moveTo(x,tip);ctx.lineTo(x-hw,shaftEnd);ctx.lineTo(x+hw,shaftEnd);ctx.closePath();ctx.fill();
+}
+
+function draw(){
+  syncSize();
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+
+  const S1=Math.PI*(r1/100)**2, S2=Math.PI*(r2/100)**2;
+  const P=F1/S1, F2=P*S2, ratio=S2/S1, mass=F2/g;
+  const amp=ratio>=1;
+
+  const sc=3.2, w1=r1*2*sc, w2=r2*2*sc;
+  const xL=W*0.26, xR=W*0.72;
+  const chY=H*0.82, chH=24;
+  const topRest=H*0.46;
+
+  const dL=anim?16*Math.max(0,Math.sin(phase)):0;
+  const dR=dL/ratio;
+  const flL=topRest+dL, flR=topRest-dR;
+  const pistH=16;
+
+  // parois
+  ctx.strokeStyle='#c2c6ca';ctx.lineWidth=3;
+  [[xL,w1],[xR,w2]].forEach(([x,w])=>{ctx.beginPath();ctx.moveTo(x-w/2,topRest-70);ctx.lineTo(x-w/2,chY+2);ctx.moveTo(x+w/2,topRest-70);ctx.lineTo(x+w/2,chY+2);ctx.stroke();});
+  // fluide
+  ctx.fillStyle=FLUID;
+  ctx.fillRect(xL-w1/2,flL,w1,chY-flL);
+  ctx.fillRect(xR-w2/2,flR,w2,chY-flR);
+  ctx.fillRect(Math.min(xL-w1/2,xR-w2/2)-2,chY,Math.abs(xR-xL)+w1/2+w2/2+4,chH);
+  ctx.strokeStyle=FLUID2;ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(xL-w1/2,flL);ctx.lineTo(xL+w1/2,flL);ctx.moveTo(xR-w2/2,flR);ctx.lineTo(xR+w2/2,flR);ctx.stroke();
+
+  // POINTS de même pression reliés par des pointillés
+  const py=chY+chH/2;
+  ctx.strokeStyle=BLUE_D;ctx.setLineDash([2,5]);ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.moveTo(xL,py);ctx.lineTo(xR,py);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=BLUE_D;
+  for(let i=0;i<=6;i++){const gx=xL+i/6*(xR-xL);ctx.beginPath();ctx.arc(gx,py,3,0,7);ctx.fill();}
+  ctx.font='600 11px system-ui';ctx.textAlign='center';
+  ctx.fillText('points à la même pression  (P₁ = P₂)',(xL+xR)/2,chY+chH+16);
+
+  // pistons
+  function piston(x,w,fltop){ctx.fillStyle='#d7dade';ctx.strokeStyle='#7a7f84';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.roundRect(x-w/2,fltop-pistH,w,pistH,3);ctx.fill();ctx.stroke();}
+  piston(xL,w1,flL);piston(xR,w2,flR);
+
+  // charge sur grand piston
+  const bw=Math.min(w2*0.82,96);
+  const loadTop=flR-pistH-46;
+  ctx.fillStyle='#e6f1fb';ctx.strokeStyle=BLUE;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.roundRect(xR-bw/2,loadTop,bw,40,6);ctx.fill();ctx.stroke();
+  ctx.fillStyle=BLUE_D;ctx.font='700 13px system-ui';ctx.textAlign='center';
+  ctx.fillText(mass.toFixed(0)+' kg',xR,loadTop+25);
+
+  // ---- FORCES ----
+  // largeur ∝ force (même échelle) ; longueur bornée -> jamais hors écran
+  const wOf=F=>Math.max(6,Math.min(4+F*0.16,30));
+  const wl1=wOf(F1), wl2=wOf(F2);
+  const lenF1=46, lenF2=52;
+  // F1 verte : vers le BAS, appuie sur le petit piston
+  const baseF1=flL-pistH-4;                 // sur le piston
+  fatArrow(xL, baseF1-lenF1, +1, lenF1, wl1, GREEN);   // du haut vers le bas
+  ctx.fillStyle=GREEN_D;ctx.font='700 14px system-ui';ctx.textAlign='right';
+  ctx.fillText('F̄₁', xL-wl1/2-8, baseF1-lenF1/2+5);
+  // F2 rouge : vers le HAUT, soulève la charge (plus LARGE, pas plus longue)
+  const baseF2=loadTop-4;
+  fatArrow(xR, baseF2, -1, lenF2, wl2, RED);
+  ctx.fillStyle=DRED;ctx.font='700 14px system-ui';ctx.textAlign='left';
+  ctx.fillText('F̄₂', xR+wl2/2+8, baseF2-lenF2/2+5);
+
+  // étiquettes entrée / sortie
+  ctx.font='700 12px system-ui';ctx.textAlign='center';
+  ctx.fillStyle=GREEN_D;ctx.fillText('ENTRÉE — tu pousses',xL,topRest-84);
+  ctx.fillStyle=DRED;ctx.fillText('SORTIE — ça soulève',xR,topRest-84);
+  // rayons
+  ctx.fillStyle=GREY;ctx.font='11px ui-monospace,monospace';
+  ctx.fillText('S₁ (r₁='+r1+' cm)',xL,chY-6);
+  ctx.fillText('S₂ (r₂='+r2+' cm)',xR,chY-6);
+
+  // déplacements
+  if(anim){
+    ctx.strokeStyle=GREEN_D;ctx.lineWidth=1.4;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(xL+w1/2+8,topRest);ctx.lineTo(xL+w1/2+8,flL);ctx.stroke();
+    ctx.strokeStyle=DRED;ctx.beginPath();ctx.moveTo(xR+w2/2+8,topRest);ctx.lineTo(xR+w2/2+8,flR);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=GREEN_D;ctx.font='600 11px system-ui';ctx.textAlign='left';ctx.fillText('d₁ (grand)',xL+w1/2+12,topRest+14);
+    ctx.fillStyle=DRED;ctx.fillText('d₂ (petit)',xR+w2/2+12,topRest-6);
+  }
+
+  // BADGE d'amplification (centre, entre les colonnes)
+  const bxc=(xL+xR)/2, byc=H*0.20;
+  ctx.font='700 24px system-ui';const txt='× '+ratio.toFixed(1);const tw=ctx.measureText(txt).width;
+  ctx.fillStyle=amp?'#e1f5ee':'#f5f5f5';ctx.strokeStyle=amp?GREEN:GREY;ctx.lineWidth=2;
+  ctx.beginPath();ctx.roundRect(bxc-tw/2-16,byc-24,tw+32,44,22);ctx.fill();ctx.stroke();
+  ctx.fillStyle=amp?GREEN_D:GREY;ctx.textAlign='center';ctx.fillText(txt,bxc,byc+6);
+  ctx.font='600 12px system-ui';ctx.fillStyle=amp?GREEN_D:DRED;
+  ctx.fillText(amp?'force AMPLIFIÉE':'force RÉDUITE',bxc,byc-30);
+
+  document.getElementById('info').innerHTML=
+    '<b style="color:'+GREEN+'">F₁ = '+F1+' N</b> → <b style="color:'+RED+'">F₂ = F₁×(r₂/r₁)² = '+F1+'×'+ratio.toFixed(1)+' = '+F2.toFixed(0)+' N</b> &nbsp;|&nbsp; '+
+    '<b style="color:'+BLUE_D+'">charge soulevée = F₂/g = '+mass.toFixed(0)+' kg</b> &nbsp;|&nbsp; '+
+    'petit piston bouge '+ratio.toFixed(1)+'× plus loin (travail identique)';
+
+  if(anim)phase+=0.03;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
