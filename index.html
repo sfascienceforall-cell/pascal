@@ -1,3 +1,13 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Principe de Pascal · SFA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@500&display=swap">
+</head>
+<body>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#fff;font-family:system-ui,-apple-system,sans-serif;}
@@ -11,6 +21,81 @@ canvas{display:block;border-radius:12px;border:1.5px solid #e8e8e8;touch-action:
 .info{font-size:12px;padding:8px 14px;border-radius:20px;background:#f5f5f5;border:1.5px solid #d0d0d0;color:#555;margin:6px 0;font-family:ui-monospace,monospace;line-height:1.8;}
 input[type=range]{flex:1;min-width:110px;}
 </style>
+<style id="sfa-kit">
+/* Kit SFA (clair) — plan blanc sur fond gris-bleu froid, encre bleu nuit, or en accent unique, réglages en règle graduée. */
+:root{--bg:#f3f5f8;--paper:#ffffff;--ink:#0c1f2e;--muted:#5b6b7b;--faint:#8a98a6;--rule:#dfe4ea;--rule2:#c9d1da;
+  --gold:#d9973f;--gold-ink:#9a6420;--press:#e9edf2;
+  --f-ui:"Mulish",system-ui,-apple-system,"Segoe UI",sans-serif;--f-math:"STIX Two Text","Cambria Math",serif;
+  --f-num:"JetBrains Mono",ui-monospace,monospace;color-scheme:light}
+html{background:var(--bg)}
+body{background:var(--bg)!important;color:var(--ink);font-family:var(--f-ui)!important;font-size:15px;line-height:1.5;
+  max-width:1180px;margin:0 auto!important;padding:20px 16px 32px!important}
+.sfa-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 24px;
+  border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:16px}
+.sfa-head h1{font:700 1.5rem/1.2 var(--f-ui);margin:0;letter-spacing:-.005em;text-wrap:balance}
+.sfa-head h1 small{display:block;font:400 .88rem var(--f-ui);color:var(--muted);margin-top:3px}
+.sfa-head .sfa-tag{font:600 .8rem var(--f-ui);color:var(--muted)}
+.sfa-head .sfa-tag b{color:var(--gold-ink);font-weight:700}
+select{font:500 .86rem var(--f-ui)!important;border:1px solid var(--rule2)!important;border-radius:3px!important;background:var(--paper)!important;color:var(--ink)!important;padding:5px 8px!important}
+.sfa-stage{border:1px solid var(--rule)!important;border-radius:4px!important;box-shadow:0 1px 2px rgba(12,31,46,.05),0 8px 24px -16px rgba(12,31,46,.18)}
+.sfa-stage canvas{border:0!important;box-shadow:none!important}
+canvas{background:var(--paper);border:1px solid var(--rule)!important;border-radius:4px!important;box-shadow:0 1px 2px rgba(12,31,46,.05),0 8px 24px -16px rgba(12,31,46,.18)}
+.row{gap:12px!important;margin:10px 0!important}
+.pill,.lbl,.tag{background:none!important;border:0!important;border-radius:0!important;padding:0!important;
+  font:600 .86rem var(--f-ui)!important;color:var(--muted);min-width:0}
+.val{background:none!important;border:0!important;border-radius:0!important;padding:0!important;
+  font:500 .9rem var(--f-num)!important;font-variant-numeric:tabular-nums;text-align:right}
+.btn{background:transparent!important;border:1px solid var(--rule2)!important;border-radius:3px!important;color:var(--muted)!important;
+  font:600 .82rem var(--f-ui)!important;padding:6px 12px!important;transition:color .15s,background .15s}
+.btn:hover{color:var(--ink)!important;background:var(--press)!important}
+.btn.on{background:var(--ink)!important;border-color:var(--ink)!important;color:#fff!important;box-shadow:inset 0 -2px 0 var(--gold)}
+.fml{background:transparent!important;border:0!important;border-left:2px solid var(--gold)!important;border-radius:0!important;
+  font:400 1.08rem/1.7 var(--f-math)!important;color:var(--ink);padding:4px 0 4px 14px!important;margin:14px 0!important}
+.info{background:var(--paper)!important;border:1px solid var(--rule)!important;border-radius:3px!important;
+  font:500 .84rem/1.8 var(--f-num)!important;color:var(--muted)!important;padding:8px 14px!important}
+input[type=range]{-webkit-appearance:none;appearance:none;height:24px;background:linear-gradient(var(--rule2),var(--rule2)) center/100% 2px no-repeat;cursor:pointer;--pc:var(--gold)}
+input[type=range]::-webkit-slider-runnable-track{height:2px;background:transparent}
+input[type=range]::-moz-range-track{height:2px;background:transparent}
+input[type=range]::-moz-range-progress{height:2px;background:var(--pc)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:6px;height:20px;border-radius:1px;background:var(--pc);margin-top:-9px;border:0}
+input[type=range]::-moz-range-thumb{width:6px;height:20px;border-radius:1px;background:var(--pc);border:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.sfa-foot{margin-top:22px;padding-top:10px;border-top:1px solid var(--rule);font-size:.78rem;color:var(--faint)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>
+/* Curseurs : la couleur du curseur reprend celle de son accent-color d'origine ; remplissage gauche en couleur. */
+addEventListener('DOMContentLoaded',()=>{
+/* Curseurs : couleur reprise de accent-color, remplissage à gauche. Resynchronisé en continu pour suivre
+   les curseurs créés ou déplacés par la simulation elle-même. */
+const fill=r=>{if(!r.dataset.sfa){r.dataset.sfa=1;const c=r.style.accentColor||getComputedStyle(r).accentColor;
+    if(c&&c!=='auto')r.style.setProperty('--pc',c);}
+  const v=r.value+'|'+r.min+'|'+r.max;if(r._sv===v)return;r._sv=v;
+  const p=(r.value-r.min)/(r.max-r.min)*100;
+  r.style.background=`linear-gradient(to right,var(--pc) ${p}%,var(--rule2) ${p}%) center/100% 2px no-repeat`;};
+const all=()=>document.querySelectorAll('input[type=range]').forEach(fill);
+all();document.addEventListener('input',e=>{if(e.target.matches&&e.target.matches('input[type=range]'))fill(e.target);});
+setInterval(all,150);
+/* Contrôles écrits en style en ligne (sans classe) : on leur donne les classes du kit. */
+const st=e=>(e.getAttribute('style')||'').replace(/\s/g,'').toLowerCase();
+const isPill=e=>/border-radius:(1[6-9]|20|99)px/.test(st(e));
+document.querySelectorAll('span').forEach(sp=>{if(sp.classList.length||!isPill(sp))return;
+  const n=sp.nextElementSibling,pv=sp.previousElementSibling;
+  if(n&&n.matches('input[type=range],select,button'))sp.classList.add('pill');
+  else if(pv&&pv.matches('input[type=range],select'))sp.classList.add('val');
+  else sp.classList.add('pill');});
+document.querySelectorAll('div').forEach(d=>{if(d.classList.length)return;const s=st(d);
+  if(/border-radius:(1[6-9]|20)px/.test(s)&&/monospace/.test(s))d.classList.add(d.id==='fml'?'fml':'info');
+  else if(d.querySelector(':scope>canvas')&&/border-radius:1[0-4]px/.test(s))d.classList.add('sfa-stage');});
+const tag=b=>{const s=st(b);b.classList.toggle('on',/#185fa5|rgb\(24,95,165\)/.test(s)&&!/#fff[;f]|#ffffff|rgb\(255,255,255\)/.test(s.match(/background:[^;]+/)?.[0]||''));};
+document.querySelectorAll('button:not(.btn)').forEach(b=>{b.classList.add('btn','sfa-n');tag(b);});
+new MutationObserver(ms=>ms.forEach(m=>{if(m.target.classList&&m.target.classList.contains('sfa-n'))tag(m.target);}))
+  .observe(document.body,{subtree:true,attributes:true,attributeFilter:['style']});
+});
+</script>
+<header class="sfa-head"><h1>Principe de Pascal<small>Transmission de la pression et presse hydraulique</small></h1><span class="sfa-tag"><b>SFA</b> · Physique · Fluides</span></header>
+
+
 
 <canvas id="cv" style="width:100%;height:58vh;min-height:360px;"></canvas>
 
@@ -79,8 +164,9 @@ function draw(){
   const chY=H*0.82, chH=24;
   const topRest=H*0.46;
 
-  const dL=anim?16*Math.max(0,Math.sin(phase)):0;
-  const dR=dL/ratio;
+  let dL=anim?16*Math.max(0,Math.sin(phase)):0;
+  let dR=dL/ratio;
+  if(dR>40){dL*=40/dR;dR=40;}   // borne visuelle : le grand déplacement reste dans le cylindre (rapport d₁/d₂ conservé)
   const flL=topRest+dL, flR=topRest-dR;
   const pistH=16;
 
@@ -101,7 +187,7 @@ function draw(){
   ctx.beginPath();ctx.moveTo(xL,py);ctx.lineTo(xR,py);ctx.stroke();ctx.setLineDash([]);
   ctx.fillStyle=BLUE_D;
   for(let i=0;i<=6;i++){const gx=xL+i/6*(xR-xL);ctx.beginPath();ctx.arc(gx,py,3,0,7);ctx.fill();}
-  ctx.font='600 11px system-ui';ctx.textAlign='center';
+  ctx.font='600 11px Mulish,system-ui,sans-serif';ctx.textAlign='center';
   ctx.fillText('points à la même pression  (P₁ = P₂)',(xL+xR)/2,chY+chH+16);
 
   // pistons
@@ -110,11 +196,12 @@ function draw(){
   piston(xL,w1,flL);piston(xR,w2,flR);
 
   // charge sur grand piston
-  const bw=Math.min(w2*0.82,96);
+  ctx.font='700 13px Mulish,system-ui,sans-serif';
+  const bw=Math.max(Math.min(w2*0.82,96),ctx.measureText(mass.toFixed(0)+' kg').width+12);
   const loadTop=flR-pistH-46;
   ctx.fillStyle='#e6f1fb';ctx.strokeStyle=BLUE;ctx.lineWidth=2.5;
   ctx.beginPath();ctx.roundRect(xR-bw/2,loadTop,bw,40,6);ctx.fill();ctx.stroke();
-  ctx.fillStyle=BLUE_D;ctx.font='700 13px system-ui';ctx.textAlign='center';
+  ctx.fillStyle=BLUE_D;ctx.font='700 13px Mulish,system-ui,sans-serif';ctx.textAlign='center';
   ctx.fillText(mass.toFixed(0)+' kg',xR,loadTop+25);
 
   // ---- FORCES ----
@@ -125,39 +212,45 @@ function draw(){
   // F1 verte : vers le BAS, appuie sur le petit piston
   const baseF1=flL-pistH-4;                 // sur le piston
   fatArrow(xL, baseF1-lenF1, +1, lenF1, wl1, GREEN);   // du haut vers le bas
-  ctx.fillStyle=GREEN_D;ctx.font='700 14px system-ui';ctx.textAlign='right';
-  ctx.fillText('F̄₁', xL-wl1/2-8, baseF1-lenF1/2+5);
+  ctx.fillStyle=GREEN_D;ctx.font='700 14px Mulish,system-ui,sans-serif';ctx.textAlign='right';
+  ctx.fillText('F̄₁', xL-wl1*1.7-6, baseF1-lenF1/2+5);
   // F2 rouge : vers le HAUT, soulève la charge (plus LARGE, pas plus longue)
   const baseF2=loadTop-4;
   fatArrow(xR, baseF2, -1, lenF2, wl2, RED);
-  ctx.fillStyle=DRED;ctx.font='700 14px system-ui';ctx.textAlign='left';
-  ctx.fillText('F̄₂', xR+wl2/2+8, baseF2-lenF2/2+5);
+  ctx.fillStyle=DRED;ctx.font='700 14px Mulish,system-ui,sans-serif';ctx.textAlign='left';
+  ctx.fillText('F̄₂', xR+wl2*1.7+6, baseF2-lenF2/2+5);
 
   // étiquettes entrée / sortie
-  ctx.font='700 12px system-ui';ctx.textAlign='center';
-  ctx.fillStyle=GREEN_D;ctx.fillText('ENTRÉE — tu pousses',xL,topRest-84);
-  ctx.fillStyle=DRED;ctx.fillText('SORTIE — ça soulève',xR,topRest-84);
+  ctx.font='700 12px Mulish,system-ui,sans-serif';ctx.textAlign='center';
+  const labY=topRest-128;   // au-dessus de la pointe de F̄₂
+  [['ENTRÉE — tu pousses',xL,GREEN_D],['SORTIE — ça soulève',xR,DRED]].forEach(([t,x,c])=>{const tw=ctx.measureText(t).width;
+    ctx.fillStyle='rgba(255,255,255,0.88)';ctx.fillRect(x-tw/2-4,labY-12,tw+8,16);ctx.fillStyle=c;ctx.fillText(t,x,labY);});
+  const labHW=Math.max(ctx.measureText('ENTRÉE — tu pousses').width,ctx.measureText('SORTIE — ça soulève').width)/2;
   // rayons
-  ctx.fillStyle=GREY;ctx.font='11px ui-monospace,monospace';
-  ctx.fillText('S₁ (r₁='+r1+' cm)',xL,chY-6);
-  ctx.fillText('S₂ (r₂='+r2+' cm)',xR,chY-6);
+  ctx.fillStyle=GREY;ctx.font='11px JetBrains Mono,ui-monospace,monospace';
+  [['S₁ (r₁='+r1+' cm)',xL],['S₂ (r₂='+r2+' cm)',xR]].forEach(([t,x])=>{const tw=ctx.measureText(t).width;
+    ctx.fillStyle='rgba(255,255,255,0.85)';ctx.fillRect(x-tw/2-3,chY-16,tw+6,14);ctx.fillStyle='#6b7177';ctx.fillText(t,x,chY-6);});
 
   // déplacements
   if(anim){
     ctx.strokeStyle=GREEN_D;ctx.lineWidth=1.4;ctx.setLineDash([3,3]);
     ctx.beginPath();ctx.moveTo(xL+w1/2+8,topRest);ctx.lineTo(xL+w1/2+8,flL);ctx.stroke();
-    ctx.strokeStyle=DRED;ctx.beginPath();ctx.moveTo(xR+w2/2+8,topRest);ctx.lineTo(xR+w2/2+8,flR);ctx.stroke();ctx.setLineDash([]);
-    ctx.fillStyle=GREEN_D;ctx.font='600 11px system-ui';ctx.textAlign='left';ctx.fillText('d₁ (grand)',xL+w1/2+12,topRest+14);
-    ctx.fillStyle=DRED;ctx.fillText('d₂ (petit)',xR+w2/2+12,topRest-6);
+    ctx.font='600 11px Mulish,system-ui,sans-serif';const d2L=xR+w2/2+12+ctx.measureText('d₂ (petit)').width>W-4; // pas la place à droite → à gauche
+    const d2x=d2L?xR-w2/2-8:xR+w2/2+8;
+    ctx.strokeStyle=DRED;ctx.beginPath();ctx.moveTo(d2x,topRest);ctx.lineTo(d2x,flR);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=GREEN_D;ctx.textAlign='left';ctx.fillText('d₁ (grand)',xL+w1/2+12,topRest+14);
+    ctx.fillStyle=DRED;ctx.textAlign=d2L?'right':'left';ctx.fillText('d₂ (petit)',d2L?d2x-4:d2x+4,topRest-6);
   }
 
   // BADGE d'amplification (centre, entre les colonnes)
-  const bxc=(xL+xR)/2, byc=H*0.20;
-  ctx.font='700 24px system-ui';const txt='× '+ratio.toFixed(1);const tw=ctx.measureText(txt).width;
+  const bxc=(xL+xR)/2;
+  ctx.font='700 24px Mulish,system-ui,sans-serif';const txt='× '+ratio.toFixed(1);const tw=ctx.measureText(txt).width;
+  const clash=(bxc-tw/2-16)<xL+labHW+8||(bxc+tw/2+16)>xR-labHW-8;
+  const byc=Math.max(52,Math.min(H*0.20,clash?labY-40:labY-8));
   ctx.fillStyle=amp?'#e1f5ee':'#f5f5f5';ctx.strokeStyle=amp?GREEN:GREY;ctx.lineWidth=2;
   ctx.beginPath();ctx.roundRect(bxc-tw/2-16,byc-24,tw+32,44,22);ctx.fill();ctx.stroke();
   ctx.fillStyle=amp?GREEN_D:GREY;ctx.textAlign='center';ctx.fillText(txt,bxc,byc+6);
-  ctx.font='600 12px system-ui';ctx.fillStyle=amp?GREEN_D:DRED;
+  ctx.font='600 12px Mulish,system-ui,sans-serif';ctx.fillStyle=amp?GREEN_D:DRED;
   ctx.fillText(amp?'force AMPLIFIÉE':'force RÉDUITE',bxc,byc-30);
 
   document.getElementById('info').innerHTML=
@@ -170,3 +263,6 @@ function draw(){
 }
 draw();
 </script>
+<footer class="sfa-foot">Science For All · simulations interactives</footer>
+</body>
+</html>
